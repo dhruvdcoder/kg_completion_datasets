@@ -1,6 +1,7 @@
 from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.instance import Instance
 from allennlp.data.fields import ArrayField, LabelField
+from allennlp.common.params import Params
 from typing import Iterable, Callable, Optional, Tuple
 from .constants import Mode
 from .types import PathT, NegativeSamplerProtocol
@@ -27,6 +28,7 @@ class OpenKEDatasetReader(DatasetReader):
                  all_datadir: PathT = Path('.data'),
                  mode: str = Mode.train,
                  number_negative_samples: int = 1):
+        super().__init__()
         self.dataset_name = dataset_name
         self.all_datadir = Path(all_datadir)
         self.mode = mode
@@ -41,7 +43,7 @@ class OpenKEDatasetReader(DatasetReader):
     def generate_replacement_index(self):
         return np.random.choice([0, 2])
 
-    def _read(self) -> Iterable[Instance]:
+    def _read(self, filename=None) -> Iterable[Instance]:
         """Read positive samples
 
         Arguments:
@@ -84,7 +86,7 @@ class OpenKEDatasetReader(DatasetReader):
         return lambda pos: self.negative_sampler.sample(pos,
                                                         self.generate_replacement_index())
 
-    def read(self) -> Iterable[Instance]:
+    def read(self, filename=None) -> Iterable[Instance]:
         """Lazyly return instances by negatively sampling"""
         positive_samples = self._read()
         all_entities = list(

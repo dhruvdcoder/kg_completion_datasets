@@ -5,7 +5,7 @@ from allennlp.common.params import Params
 from typing import Iterable, Callable, Optional, Tuple
 from .constants import Mode
 from .types import PathT, NegativeSamplerProtocol
-from ..file_readers.openke import TrainIdReader, EntityIdReader
+from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader
 from ..sampling.simple_samplers import UniformNegativeSampler
 from pathlib import Path
 from .lazy_iterators import LazyIteratorWithSingleNegativeSampling
@@ -36,8 +36,8 @@ class OpenKEDatasetReader(DatasetReader):
 
         if self.mode == Mode.train:
             self.file_reader = TrainIdReader(self.all_datadir / dataset_name)
-        else:
-            raise ValueError
+        elif self.mode == Mode.validate:
+            self.file_reader = ValIdReader(self.all_datadir / dataset_name)
         self.negative_sampler = UniformNegativeSampler()
 
     def generate_replacement_index(self):

@@ -1,4 +1,4 @@
 class Mode:
     train = 'train'
-    dev = 'dev'
+    validate = 'validate'
     test = 'test'

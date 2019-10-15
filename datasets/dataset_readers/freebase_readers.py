@@ -41,7 +41,7 @@ class OpenKEDatasetReader(DatasetReader):
         self.negative_sampler = UniformNegativeSampler()
 
     def generate_replacement_index(self):
-        return np.random.choice([0, 2])
+        return np.random.choice([0, 1])  # (eh,et,r)
 
     def _read(self, filename=None) -> Iterable[Instance]:
         """Read positive samples
@@ -59,15 +59,15 @@ class OpenKEDatasetReader(DatasetReader):
         pos_head = ArrayField(
             np.array(positive_sample[0], dtype=np.int), dtype=np.int)
         pos_relation = ArrayField(
-            np.array(positive_sample[1], dtype=np.int), dtype=np.int)
-        pos_tail = ArrayField(
             np.array(positive_sample[2], dtype=np.int), dtype=np.int)
+        pos_tail = ArrayField(
+            np.array(positive_sample[1], dtype=np.int), dtype=np.int)
         neg_head = ArrayField(
             np.array(negative_sample[0], dtype=np.int), dtype=np.int)
         neg_relation = ArrayField(
-            np.array(negative_sample[1], dtype=np.int), dtype=np.int)
-        neg_tail = ArrayField(
             np.array(negative_sample[2], dtype=np.int), dtype=np.int)
+        neg_tail = ArrayField(
+            np.array(negative_sample[1], dtype=np.int), dtype=np.int)
         label = LabelField(
             1, skip_indexing=True)  # first one is always the pos sample
         fields = {

@@ -69,3 +69,8 @@ class SamplesIdReader(FileReader):
 @FileReader.register('train-id-reader')
 class TrainIdReader(SamplesIdReader):
     filename = 'train2id.txt'
+
+
+@FileReader.register('val-id-reader')
+class ValIdReader(SamplesIdReader):
+    filename = 'valid2id.txt'

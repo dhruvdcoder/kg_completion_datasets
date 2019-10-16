@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-install_requires =['cachetools==3.1.1','allennlp',
+install_requires =['cachetools==3.1.1','allennlp=0.9.0',
  'certifi==2019.9.11',
  'chardet==3.0.4',
  'filelock==3.0.12',

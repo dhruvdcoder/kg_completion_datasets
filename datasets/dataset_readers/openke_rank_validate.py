@@ -62,6 +62,6 @@ class OpenKERankValidationDatasetReader(DatasetReader):
         return Instance(fields)
 
     def read(self, filename=None) -> Iterable[Instance]:
-        instances = self._read()
+        instances = [self.sample_to_instance(i) for i in self._read()]
 
         return instances

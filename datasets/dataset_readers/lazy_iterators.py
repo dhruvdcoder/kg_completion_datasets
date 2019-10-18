@@ -24,10 +24,9 @@ class LazyIteratorWithNegativeSampling(Iterable):
 
     def __iter__(self):
         for positive_sample in self.positive_samples:
-            yield positive_sample
-
             for negative_sample in self.negative_sampler(positive_sample):
-                yield negative_sample
+                yield self.samples_to_instance(positive_sample,
+                                               negative_sample)
 
 
 class LazyIteratorWithSingleNegativeSampling(LazyIteratorWithNegativeSampling):

@@ -8,7 +8,7 @@ from .types import PathT, NegativeSamplerProtocol
 from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader
 from ..sampling.simple_samplers import UniformNegativeSampler
 from pathlib import Path
-from .lazy_iterators import LazyIteratorWithSingleNegativeSampling
+from .lazy_iterators import LazyIteratorWithNegativeSampling
 import numpy as np
 
 SampleT = Tuple[int, int, int]
@@ -42,6 +42,10 @@ class OpenKEDatasetReader(DatasetReader):
 
     def generate_replacement_index(self):
         return np.random.choice([0, 1])  # (eh,et,r)
+
+    def replacement_index_generator(self):
+        for i in range(self.number_negative_samples):
+            yield self.generate_replacement_index()
 
     def _read(self, filename=None) -> Iterable[Instance]:
         """Read positive samples
@@ -86,6 +90,11 @@ class OpenKEDatasetReader(DatasetReader):
         return lambda pos: self.negative_sampler.sample(pos,
                                                         self.generate_replacement_index())
 
+    def negative_sampler_generator(self):
+        return lambda pos: self.negative_sampler(
+            pos, N=self.number_negative_samples,
+            replacement_index=self.replacement_index_generator())
+
     def read(self, filename=None) -> Iterable[Instance]:
         """Lazyly return instances by negatively sampling"""
         positive_samples = self._read()
@@ -94,8 +103,8 @@ class OpenKEDatasetReader(DatasetReader):
         self.negative_sampler.entities = all_entities
         self.negative_sampler.positives = positive_samples
 
-        return LazyIteratorWithSingleNegativeSampling(
-            self.single_negative_sampler_generator(), positive_samples,
+        return LazyIteratorWithNegativeSampling(
+            self.negative_sampler_generator(), positive_samples,
             self.samples_to_instance)
 
 

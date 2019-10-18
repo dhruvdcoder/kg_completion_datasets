@@ -33,7 +33,7 @@ def test_from_params():
             "mode":
             "train",
             "number_negative_samples":
-            1
+            2
         },
         "train_data_path": None
     })

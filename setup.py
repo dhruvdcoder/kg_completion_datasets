@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-install_requires =['cachetools==3.1.1','allennlp==0.9.0',
+install_requires =['cachetools==3.1.1','allennlp>=0.9.0',
  'certifi==2019.9.11',
  'chardet==3.0.4',
  'filelock==3.0.12',
@@ -20,7 +20,7 @@ install_requires =['cachetools==3.1.1','allennlp==0.9.0',
  'requests==2.22.0',
  'rsa==4.0',
  'six==1.12.0',
- 'torch==1.2.0',
+ 'torch>=1.2.0',
  'torchtext==0.4.0',
  'tqdm==4.36.1',
  'uritemplate==3.0.0',

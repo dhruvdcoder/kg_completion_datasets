@@ -97,7 +97,7 @@ class OpenKEDatasetReader(DatasetReader):
 
     def read(self, filename=None) -> Iterable[Instance]:
         """Lazyly return instances by negatively sampling"""
-        positive_samples = self._read()
+        positive_samples = set(self._read())
         all_entities = list(
             EntityIdReader(self.all_datadir / self.dataset_name)())
         self.negative_sampler.entities = all_entities

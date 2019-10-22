@@ -66,7 +66,7 @@ class UniformNegativeSampler(NegtiveSampler):
                 potential_negative_sample = list(deepcopy(sample))
                 potential_negative_sample[replacement_index] = a_sample_entity
 
-                if potential_negative_sample in self.all_positive:
+                if tuple(potential_negative_sample) in self.all_positive:
                     continue
 
                 return tuple(potential_negative_sample)

@@ -6,8 +6,11 @@ from typing import Union, Iterable, Any
 class FileReader(Registrable):
     filename = 'override_this'
 
-    def __init__(self, dataset_dir: Union[str, Path]):
-        self.dataset_dir = Path(dataset_dir)
+    def __init__(self, dataset_dir: Union[str, Path] = None):
+        if dataset_dir is not None:
+            self.dataset_dir = Path(dataset_dir)
+        else:
+            self.dataset_dir = None
 
     def read(self, filename: Path) -> Iterable[Any]:
         raise NotImplementedError

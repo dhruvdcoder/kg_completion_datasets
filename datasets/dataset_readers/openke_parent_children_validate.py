@@ -7,9 +7,10 @@ from ..file_readers.openke import SamplesIdReader, JustNumberReader
 from typing import Iterable, Optional, List, Tuple
 import numpy as np
 from allennlp.data.fields import ArrayField
-from logging import logger
 import pickle
 import itertools
+import logging
+logger = logging.getLogger(__name__)
 
 
 @DatasetReader.register(
@@ -20,9 +21,9 @@ class OpenKESingleRelationParentChildrenValidationDatasetReader(DatasetReader):
     """
 
     def __init__(self,
-                 dataset_name: str = None,
+                 dataset_name: Optional[str] = None,
                  all_datadir: PathT = Path('.data'),
-                 validation_file: str = None,
+                 validation_file: Optional[str] = None,
                  all_true_files: Optional[List[str]] = None):
 
         if dataset_name is None:
@@ -66,17 +67,23 @@ class OpenKESingleRelationParentChildrenValidationDatasetReader(DatasetReader):
         children = {}
 
         for sample in itertools.chain(*(self.generate_samples(
-                self.all_datadir / self.dataset_name / filename))):
+            self.all_datadir / self.dataset_name / filename)
+                for filename in self.all_true_files)):
             samples_children = children.get(sample[0], set())
             samples_children.add(sample[1])
             children[sample[0]] = samples_children
 
-            samples_parents = parents.get(sample[0], set())
-            samples_parents.add(sample[1])
-            parents[sample[0]] = samples_parents
+            samples_parents = parents.get(sample[1], set())
+            samples_parents.add(sample[0])
+            parents[sample[1]] = samples_parents
 
-        samples = [(entity, list(parents[entity]), list(children[entity]))
-                   for entity in self.generate_entities()]
+        samples = [
+            (entity, list(parents.get(entity, set())),
+             list(children.get(entity, set())))
+
+            for entity in self.generate_entities(
+                self.all_datadir / self.dataset_name / self.validation_file)
+        ]
         # cache
         # save to cache
         with open(cache_file, 'wb') as cf:
@@ -90,12 +97,12 @@ class OpenKESingleRelationParentChildrenValidationDatasetReader(DatasetReader):
             self, sample: Tuple[int, List[int], List[int]]) -> Instance:
         node = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
         parents = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
-        children = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        children = ArrayField(np.array(sample[2], dtype=np.int), dtype=np.int)
         fields = {'node': node, 'gt_parent': parents, 'gt_child': children}
 
-        return fields
+        return Instance(fields)
 
     def read(self, filename=None) -> Iterable[Instance]:
-        instances = [self.sample_to_instance(i) for i in self._read()]
+        instances = [self.samples_to_instance(i) for i in self._read()]
 
         return instances

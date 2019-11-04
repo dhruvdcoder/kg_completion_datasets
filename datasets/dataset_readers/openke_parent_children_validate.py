@@ -83,6 +83,8 @@ class OpenKESingleRelationParentChildrenValidationDatasetReader(DatasetReader):
 
             for entity in self.generate_entities(
                 self.all_datadir / self.dataset_name / self.validation_file)
+
+            if (entity in parents) and (entity in children)
         ]
         # cache
         # save to cache

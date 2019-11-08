@@ -35,7 +35,7 @@ class OpenKESingleRelationParentChildrenValidationDatasetReader(DatasetReader):
         self.validation_file = validation_file
 
     def cache_filename(self):
-        filename = '_'.join([self.validation_file] +
+        filename = '_'.join(self.validation_file +
                             self.all_true_files) + '.pkl'
 
         return self.all_datadir / self.dataset_name / filename

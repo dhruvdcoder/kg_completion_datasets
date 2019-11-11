@@ -26,9 +26,13 @@ class ClassificationValidationDatasetReader(DatasetReader):
                  dataset_name: Optional[str] = None,
                  all_datadir: PathT = Path('.data'),
                  validation_file: str = 'classification_dev.txt'):
+
+        if dataset_name is None:
+            raise ValueError("provide dataset_name")
         self.dataset_name = dataset_name
         self.all_datadir = Path(all_datadir)
         self.validation_file = validation_file
+        self.file_reader = SamplesIdReader()
 
     def sample_to_instance(self,
                            sample: Tuple[int, int, int, int]) -> Instance:
@@ -40,11 +44,8 @@ class ClassificationValidationDatasetReader(DatasetReader):
         return Instance({'h': head, 't': tail, 'r': relation, 'label': label})
 
     def _read(self, filename=None) -> Iterable[Tuple]:
-        with open(self.all_datadir / self.dataset_name /
-                  self.validation_file) as f:
-
-            for line in f:
-                return tuple(line.split())
+        return self.file_reader.read(
+            self.all_datadir / self.dataset_name / self.validation_file)
 
     def read(self, filename=None) -> Iterable[Instance]:
         instances = [self.sample_to_instance(i) for i in self._read(filename)]

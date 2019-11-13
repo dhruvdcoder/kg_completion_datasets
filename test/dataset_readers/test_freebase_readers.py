@@ -1,6 +1,6 @@
 from datasets.dataset_readers.freebase_readers import (
     OpenKEDatasetReader, OpenKEClassificationDatasetReader)
-from allennlp.data.fields import ArrayField
+from allennlp.data.fields import ArrayField, LabelField
 from allennlp.common.params import Params
 from allennlp.training import util
 from pathlib import Path
@@ -90,6 +90,9 @@ def test_from_params2():
         for name, field in instance.items():
             if isinstance(field, ArrayField):
                 print(name, field.array)
+
+            if isinstance(field, LabelField):
+                print(name, field.label)
 
 
 if __name__ == "__main__":

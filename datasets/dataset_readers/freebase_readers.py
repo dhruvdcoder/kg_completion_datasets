@@ -2,7 +2,7 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.instance import Instance
 from allennlp.data.fields import ArrayField, LabelField
 from allennlp.common.params import Params
-from typing import Iterable, Callable, Optional, Tuple
+from typing import Iterable, Callable, Optional, Tuple, List
 from .constants import Mode
 from .types import PathT, NegativeSamplerProtocol
 from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader
@@ -11,19 +11,35 @@ from pathlib import Path
 from .lazy_iterators import (LazyIteratorWithNegativeSampling,
                              LazyIteratorWithSequentialNegativeSampling)
 import numpy as np
-
+import logging
+logger = logging.getLogger(__name__)
 SampleT = Tuple[int, int, int]
 
 
-@DatasetReader.register("openke-dataset")
-class OpenKEDatasetReader(DatasetReader):
+class OpenKEDataset(DatasetReader):
+    """Base class for openke style datasets. Do not create instance
+    directly"""
+
+    def __init__(self,
+                 dataset_name: str = 'FB15K237',
+                 all_datadir: PathT = Path('.data'),
+                 mode: str = Mode.train,
+                 lazy: bool = False):
+        super().__init__(lazy)
+        self.dataset_name = dataset_name
+        self.all_datadir = Path(all_datadir)
+        self.mode = mode
+
+        if self.mode == Mode.train:
+            self.file_reader = TrainIdReader(self.all_datadir / dataset_name)
+        elif self.mode == Mode.validate:
+            self.file_reader = ValIdReader(self.all_datadir / dataset_name)
+
+
+@DatasetReader.register("openke-dataset-negative-sampling")
+class OpenKEDatasetReaderWithNegativeSampling(OpenKEDataset):
     """OpenKE style KB completion dataset reader
     """
-    urls = {
-        'FB15K237':
-        'https://drive.google.com/uc?id=1R1c-hfPSxUfQoHY5i_H0MVpXOyErVFjf'
-    }
-
     lazy_iter = LazyIteratorWithNegativeSampling
 
     def __init__(self,
@@ -31,16 +47,9 @@ class OpenKEDatasetReader(DatasetReader):
                  all_datadir: PathT = Path('.data'),
                  mode: str = Mode.train,
                  number_negative_samples: int = 1):
-        super().__init__()
-        self.dataset_name = dataset_name
-        self.all_datadir = Path(all_datadir)
-        self.mode = mode
+        super().__init__(dataset_name, all_datadir, mode, lazy=True)
         self.number_negative_samples = number_negative_samples
 
-        if self.mode == Mode.train:
-            self.file_reader = TrainIdReader(self.all_datadir / dataset_name)
-        elif self.mode == Mode.validate:
-            self.file_reader = ValIdReader(self.all_datadir / dataset_name)
         self.negative_sampler = UniformNegativeSampler()
 
     def generate_replacement_index(self):
@@ -110,8 +119,9 @@ class OpenKEDatasetReader(DatasetReader):
                               positive_samples, self.samples_to_instance)
 
 
-@DatasetReader.register("openke-classification-dataset")
-class OpenKEClassificationDatasetReader(OpenKEDatasetReader):
+@DatasetReader.register("openke-classification-dataset-negative-sampling")
+class OpenKEClassificationDatasetReaderWithNegativeSampling(
+        OpenKEDatasetReaderWithNegativeSampling):
     lazy_iter = LazyIteratorWithSequentialNegativeSampling
 
     def samples_to_instance(self, sample: SampleT, label: int) -> Instance:
@@ -122,6 +132,52 @@ class OpenKEClassificationDatasetReader(OpenKEDatasetReader):
         fields = {'h': head, 't': tail, 'r': relation, 'label': label_f}
 
         return Instance(fields)
+
+
+@DatasetReader.register("openke-dataset")
+class OpenKEDatasetReader(OpenKEDataset):
+    def __init__(self,
+                 dataset_name: str = 'FB15K237',
+                 all_datadir: PathT = Path('.data'),
+                 mode: str = Mode.train):
+        """ This reader does not support lazy because we want to be
+        fast"""
+        super().__init__(dataset_name, all_datadir, mode, lazy=False)
+        logger.warn("THIS DATASET READER DOES NOT DO NEGATIVE SAMPLING")
+        logger.warn(
+            "IT IS THE DOWNSTREAM MODEL'S OR ITERATOR'S RESPONCIBILITY "
+            "TO DO NEG SAMPLING, IF REQUIRED")
+
+    def sample_to_instance(self, sample: SampleT):
+        """ Always expect one positive sample"""
+        pos_head = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
+        pos_relation = ArrayField(
+            np.array(sample[2], dtype=np.int), dtype=np.int)
+        pos_tail = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        label = LabelField(
+            1, skip_indexing=True)  # first one is always the pos sample
+        fields = {
+            'h': pos_head,
+            't': pos_tail,
+            'r': pos_relation,
+            'label': label
+        }
+
+        return Instance(fields)
+
+    def _read(self, filename=None) -> List[Instance]:
+        logger.info("Reading data from file")
+        samples = self.file_reader()
+        instances = []
+        logger.info("Creating instances from samples")
+
+        for sample in samples:
+            instances.append(self.sample_to_instance(sample))
+
+        return instances
+
+    def read(self, filename=None):
+        return super().read(filename)
 
 
 if __name__ == "__main__":

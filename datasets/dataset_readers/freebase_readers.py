@@ -8,7 +8,8 @@ from .types import PathT, NegativeSamplerProtocol
 from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader
 from ..sampling.simple_samplers import UniformNegativeSampler
 from pathlib import Path
-from .lazy_iterators import LazyIteratorWithNegativeSampling
+from .lazy_iterators import (LazyIteratorWithNegativeSampling,
+                             LazyIteratorWithSequentialNegativeSampling)
 import numpy as np
 
 SampleT = Tuple[int, int, int]
@@ -22,6 +23,8 @@ class OpenKEDatasetReader(DatasetReader):
         'FB15K237':
         'https://drive.google.com/uc?id=1R1c-hfPSxUfQoHY5i_H0MVpXOyErVFjf'
     }
+
+    lazy_iter = LazyIteratorWithNegativeSampling
 
     def __init__(self,
                  dataset_name: str = 'FB15K237',
@@ -103,9 +106,22 @@ class OpenKEDatasetReader(DatasetReader):
         self.negative_sampler.entities = all_entities
         self.negative_sampler.positives = positive_samples
 
-        return LazyIteratorWithNegativeSampling(
-            self.negative_sampler_generator(), positive_samples,
-            self.samples_to_instance)
+        return self.lazy_iter(self.negative_sampler_generator(),
+                              positive_samples, self.samples_to_instance)
+
+
+@DatasetReader.register("openke-classification-dataset")
+class OpenKEClassificationDatasetReader(OpenKEDatasetReader):
+    lazy_iter = LazyIteratorWithSequentialNegativeSampling
+
+    def samples_to_instance(self, sample: SampleT, label: int) -> Instance:
+        head = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
+        relation = ArrayField(np.array(sample[2], dtype=np.int), dtype=np.int)
+        tail = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        label_f = LabelField(label, skip_indexing=True)
+        fields = {'h': head, 't': tail, 'r': relation, 'label': label_f}
+
+        return Instance(fields)
 
 
 if __name__ == "__main__":

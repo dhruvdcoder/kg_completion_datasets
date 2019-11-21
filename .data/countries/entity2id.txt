@@ -4,7 +4,8 @@ africa	1
 slovakia	2
 ukraine	3
 hungary	4
-austria	5
+271austria	5
+
 czechia	6
 poland	7
 niger	8

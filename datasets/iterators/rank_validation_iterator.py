@@ -18,4 +18,5 @@ class SingleSampleRankValidationIterator(BasicIterator):
             maximum_samples_per_batch: Tuple[str, int] = None,
     ):
         batch_size = 1
-        super().__init__(batch_size=batch_size)
+        super().__init__(
+            batch_size=batch_size, cache_instances=cache_instances)

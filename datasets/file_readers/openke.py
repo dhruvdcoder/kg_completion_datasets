@@ -164,14 +164,13 @@ class RankValIdReader(FileReader):
 
             for val_sample in self.read(self.dataset_dir / valfile):
                 tail_replacement_entities = list(
-                    itertools.chain([val_sample[tail_idx]],
+                    itertools.chain(
                                     negatives(val_sample[head_idx],
-                                              val_sample[rel_idx], tail_idx)))
+                                              val_sample[rel_idx], tail_idx),[val_sample[tail_idx]]))
                 head_replacement_entities = list(
                     itertools.chain(
-                        [val_sample[head_idx]],
                         negatives(val_sample[tail_idx], val_sample[rel_idx],
-                                  head_idx)))  # create by replacing head
+                                  head_idx),[val_sample[head_idx]]))  # create by replacing head
                 head_replaced_sample = [
                     val_sample[tail_idx], val_sample[rel_idx],
                     head_replacement_entities, head_idx

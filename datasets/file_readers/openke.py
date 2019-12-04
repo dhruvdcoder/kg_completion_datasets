@@ -39,7 +39,7 @@ class SamplesIdReader(FileReader):
     """ Reads samples from Openke files assuming the following structure
 
     numsamples (int)
-    head_entity_id relation_id tail_entity_id
+    head_entity_id tail_id relation_id
     ...            ...         ...
     """
     filename = 'override_this'
@@ -215,3 +215,9 @@ class RankValIdReader(FileReader):
                         filename))
 
         return samples
+
+
+@FileReader.register('rank-test-id-reader')
+class RankTestIdReader(RankValIdReader):
+    files = [Path('valid2id.txt'), Path('train2id.txt'), Path('test2id.txt')]
+    valfile = Path('test2id.txt')

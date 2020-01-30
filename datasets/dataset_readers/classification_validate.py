@@ -2,11 +2,11 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.instance import Instance
 from pathlib import Path
 from .types import PathT
-from ..file_readers.openke import SamplesIdReader, JustNumberReader
+from ..file_readers.openke import SamplesIdReader, JustNumberReader, ClassificationSamplesIdReader
 
 from typing import Iterable, Optional, List, Tuple
 import numpy as np
-from allennlp.data.fields import ArrayField
+from allennlp.data.fields import ArrayField, LabelField
 import pickle
 import itertools
 import logging
@@ -51,3 +51,35 @@ class ClassificationValidationDatasetReader(DatasetReader):
         instances = [self.sample_to_instance(i) for i in self._read(filename)]
 
         return instances
+
+
+@DatasetReader.register('classification-with-negs-validation-dataset')
+class ClassificationValidationDatasetReader(
+        ClassificationValidationDatasetReader):
+    def __init__(self,
+                 dataset_name: Optional[str] = None,
+                 all_datadir: PathT = Path('.data'),
+                 validation_file: str = 'classification_valid2id.txt'):
+        super().__init__(dataset_name, all_datadir, validation_file)
+
+    def sample_to_instance(
+            self, sample: Tuple[int, int, int, int, int, int]) -> Instance:
+        pos_head = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
+        pos_tail = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        pos_relation = ArrayField(
+            np.array(sample[2], dtype=np.int), dtype=np.int)
+        neg_head = ArrayField(np.array(sample[3], dtype=np.int), dtype=np.int)
+        neg_tail = ArrayField(np.array(sample[4], dtype=np.int), dtype=np.int)
+        neg_relation = ArrayField(
+            np.array(sample[5], dtype=np.int), dtype=np.int)
+        label = LabelField(0, skip_indexing=True)
+
+        return Instance({
+            'p_h': pos_head,
+            'p_t': pos_tail,
+            'p_r': pos_relation,
+            'n_h': neg_head,
+            'n_t': neg_tail,
+            'n_r': neg_relation,
+            'label': label
+        })

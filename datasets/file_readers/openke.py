@@ -82,6 +82,11 @@ class ValIdReader(SamplesIdReader):
     filename = 'valid2id.txt'
 
 
+@FileReader.register('test-id-reader')
+class TestIdReader(SamplesIdReader):
+    filename = 'test2id.txt'
+
+
 RankValidationSampleT = Tuple[
     int, int, List[int],
     int]  # eh (or et), r, negatives of et (or eh) with first entry positive, 0 or 1 (0 for eh 1 for et)
@@ -98,7 +103,7 @@ def get_relation_from_val_sample(
 
 @FileReader.register('rank-val-id-reader')
 class RankValIdReader(FileReader):
-    files = [Path('valid2id.txt'), Path('train2id.txt')]
+    files = [Path('valid2id.txt'), Path('train2id.txt'), Path('test2id.txt')]
     valfile = Path('valid2id.txt')
     """Reads the validation file or cache
     to produce samples for rank validation"""
@@ -152,6 +157,9 @@ class RankValIdReader(FileReader):
                 else:
                     s = [None, head_or_tail, relation]
 
+                #also_check = [head_or_tail, head_or_tail, relation]
+                also_check = []
+
                 for entity in all_entities:
                     possible = deepcopy(s)
                     possible[which] = entity
@@ -159,18 +167,21 @@ class RankValIdReader(FileReader):
 
                     if possible in all_positive:
                         continue
+                    elif possible == also_check:
+                        continue
                     else:
                         yield entity
 
             for val_sample in self.read(self.dataset_dir / valfile):
                 tail_replacement_entities = list(
                     itertools.chain(
-                                    negatives(val_sample[head_idx],
-                                              val_sample[rel_idx], tail_idx),[val_sample[tail_idx]]))
+                        negatives(val_sample[head_idx], val_sample[rel_idx],
+                                  tail_idx), [val_sample[tail_idx]]))
                 head_replacement_entities = list(
                     itertools.chain(
                         negatives(val_sample[tail_idx], val_sample[rel_idx],
-                                  head_idx),[val_sample[head_idx]]))  # create by replacing head
+                                  head_idx),
+                        [val_sample[head_idx]]))  # create by replacing head
                 head_replaced_sample = [
                     val_sample[tail_idx], val_sample[rel_idx],
                     head_replacement_entities, head_idx

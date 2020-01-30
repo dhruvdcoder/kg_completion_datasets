@@ -6,7 +6,7 @@ from ..file_readers.openke import SamplesIdReader, JustNumberReader, Classificat
 
 from typing import Iterable, Optional, List, Tuple
 import numpy as np
-from allennlp.data.fields import ArrayField
+from allennlp.data.fields import ArrayField, LabelField
 import pickle
 import itertools
 import logging
@@ -72,6 +72,7 @@ class ClassificationValidationDatasetReader(
         neg_tail = ArrayField(np.array(sample[4], dtype=np.int), dtype=np.int)
         neg_relation = ArrayField(
             np.array(sample[5], dtype=np.int), dtype=np.int)
+        label = LabelField(0, skip_indexing=True)
 
         return Instance({
             'p_h': pos_head,
@@ -80,5 +81,5 @@ class ClassificationValidationDatasetReader(
             'n_h': neg_head,
             'n_t': neg_tail,
             'n_r': neg_relation,
-            'label': 1
+            'label': label
         })

@@ -57,7 +57,7 @@ def get_nx_graph(start: Synset,
 def draw_to_file(graph: nx.DiGraph, filename: str) -> None:
     a_graph = nx.nx_agraph.to_agraph(graph)
     a_graph.layout('dot')
-    a_graph.draw('temp.png')
+    a_graph.draw('filename')
 
 
 def create_triples(graph: nx.DiGraph,

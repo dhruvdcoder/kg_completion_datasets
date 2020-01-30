@@ -72,6 +72,20 @@ class SamplesIdReader(FileReader):
             return samples
 
 
+class ClassificationSamplesIdReader(SamplesIdReader):
+    """ Reads samples from Openke files assuming the following structure
+
+    numsamples (int)
+    pos_head_entity_id pos_tail_id pos_relation_id neg_head_entity_id neg_tail_entity_id neg_relation_id
+    ...            ...         ...
+    """
+
+    def read(self,
+             filename: Path) -> Iterable[Tuple[int, int, int, int, int, int]]:
+
+        return super().read(filename)
+
+
 @FileReader.register('train-id-reader')
 class TrainIdReader(SamplesIdReader):
     filename = 'train2id.txt'

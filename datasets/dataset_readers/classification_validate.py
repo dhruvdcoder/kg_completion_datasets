@@ -44,8 +44,17 @@ class ClassificationValidationDatasetReader(DatasetReader):
         return Instance({'h': head, 't': tail, 'r': relation, 'label': label})
 
     def _read(self, filename=None) -> Iterable[Tuple]:
-        return self.file_reader.read(
-            self.all_datadir / self.dataset_name / self.validation_file)
+        fname = None
+
+        if filename is not None:
+            if filename.strip() != 'dummy_path':
+                fname = filename
+
+        if fname is None:
+            return self.file_reader.read(
+                self.all_datadir / self.dataset_name / self.validation_file)
+        else:
+            return self.file_reader.read(fname)
 
     def read(self, filename=None) -> Iterable[Instance]:
         instances = [self.sample_to_instance(i) for i in self._read(filename)]

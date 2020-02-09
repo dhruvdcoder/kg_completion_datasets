@@ -180,6 +180,41 @@ class OpenKEDatasetReader(OpenKEDataset):
         return super().read(filename)
 
 
+@DatasetReader.register("openke-dataset-max-margin")
+class OpenKEDatasetReaderMaxMargin(OpenKEDatasetReader):
+    def samples_to_instance(
+            self,
+            sample: SampleT,
+    ) -> Instance:
+        positive_sample = sample[0:3]
+        negative_sample = sample[3:6]
+        pos_head = ArrayField(
+            np.array(positive_sample[0], dtype=np.int), dtype=np.int)
+        pos_relation = ArrayField(
+            np.array(positive_sample[2], dtype=np.int), dtype=np.int)
+        pos_tail = ArrayField(
+            np.array(positive_sample[1], dtype=np.int), dtype=np.int)
+        neg_head = ArrayField(
+            np.array(negative_sample[0], dtype=np.int), dtype=np.int)
+        neg_relation = ArrayField(
+            np.array(negative_sample[2], dtype=np.int), dtype=np.int)
+        neg_tail = ArrayField(
+            np.array(negative_sample[1], dtype=np.int), dtype=np.int)
+        label = LabelField(
+            1, skip_indexing=True)  # first one is always the pos sample
+        fields = {
+            "p_h": pos_head,
+            "p_r": pos_relation,
+            "p_t": pos_tail,
+            "n_h": neg_head,
+            "n_r": neg_relation,
+            "n_t": neg_tail,
+            "label": label
+        }
+
+        return Instance(fields)
+
+
 if __name__ == "__main__":
     test_data_path = Path(
         '/Users/dhruv/UnsyncedDocuments/IESL/kb_completion/datasets/.data/test'

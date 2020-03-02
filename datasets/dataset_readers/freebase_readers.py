@@ -14,6 +14,7 @@ import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 SampleT = Tuple[int, int, int]
+SampleQ = Tuple[int, int, int, int]
 
 
 class OpenKEDataset(DatasetReader):
@@ -210,6 +211,32 @@ class OpenKEDatasetReaderMaxMargin(OpenKEDatasetReader):
             "n_r": neg_relation,
             "n_t": neg_tail,
             "label": label
+        }
+
+        return Instance(fields)
+
+@DatasetReader.register("openke-dataset-relation-transform")
+class OpenKEDatasetReaderRelTransform(OpenKEDatasetReader):
+    def sample_to_instance(
+            self,
+            sample: SampleQ,
+    ) -> Instance:
+        """ Always expect one positive sample"""
+        pos_head = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
+        pos_relation_head = ArrayField(
+            np.array(sample[2], dtype=np.int), dtype=np.int)
+        pos_relation_tail = ArrayField(
+            np.array(sample[3], dtype=np.int), dtype=np.int)
+        pos_tail = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        label = LabelField(
+            1, skip_indexing=True)  # first one is always the pos sample
+
+        fields = {
+            'h': pos_head,
+            't': pos_tail,
+            'r_h': pos_relation_head,
+            'r_t': pos_relation_tail,
+            'label': label
         }
 
         return Instance(fields)

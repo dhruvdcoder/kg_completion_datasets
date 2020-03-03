@@ -92,3 +92,28 @@ class ClassificationValidationDatasetReader(
             'n_r': neg_relation,
             'label': label
         })
+
+
+@DatasetReader.register('classification-validation-dataset-relation-transform')
+class ClassificationValidationDatasetReaderRelTransform(
+        ClassificationValidationDatasetReader):
+    def __init__(self,
+                 dataset_name: Optional[str] = None,
+                 all_datadir: PathT = Path('.data'),
+                 validation_file: str = 'classification_valid2id.txt'):
+        super().__init__(dataset_name, all_datadir, validation_file)
+
+    def sample_to_instance(self,
+                           sample: Tuple[int, int, int, int, int]) -> Instance:
+        head = ArrayField(np.array(sample[0], dtype=np.int), dtype=np.int)
+        tail = ArrayField(np.array(sample[1], dtype=np.int), dtype=np.int)
+        relation_head = ArrayField(np.array(sample[2], dtype=np.int), dtype=np.int)
+        relation_tail = ArrayField(np.array(sample[3], dtype=np.int), dtype=np.int)
+        label = ArrayField(np.array(sample[4], dtype=np.int), dtype=np.int)
+
+        return Instance(
+            {'h': head,
+             't': tail,
+             'r_h': relation_head,
+             'r_t': relation_tail,
+             'label': label})

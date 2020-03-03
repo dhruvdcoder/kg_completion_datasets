@@ -182,7 +182,7 @@ class OpenKEDatasetReader(OpenKEDataset):
 
 @DatasetReader.register("openke-dataset-max-margin")
 class OpenKEDatasetReaderMaxMargin(OpenKEDatasetReader):
-    def samples_to_instance(
+    def sample_to_instance(
             self,
             sample: SampleT,
     ) -> Instance:

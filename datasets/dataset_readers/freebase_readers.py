@@ -47,8 +47,16 @@ class OpenKEDatasetReaderWithNegativeSampling(OpenKEDataset):
                  dataset_name: str = 'FB15K237',
                  all_datadir: PathT = Path('.data'),
                  mode: str = Mode.train,
+                 positive_files: Optional[List[str]] = None,
                  number_negative_samples: int = 1):
         super().__init__(dataset_name, all_datadir, mode, lazy=True)
+
+        if positive_files is None:
+            positive_files = ['train2id.txt', 'valid2id.txt', 'test2id.txt']
+        self.pos_file_readers = [
+            TrainIdReader(self.all_datadir / f) for f in positive_files
+        ]
+
         self.number_negative_samples = number_negative_samples
 
         self.negative_sampler = UniformNegativeSampler()
@@ -110,7 +118,9 @@ class OpenKEDatasetReaderWithNegativeSampling(OpenKEDataset):
 
     def read(self, filename=None) -> Iterable[Instance]:
         """Lazyly return instances by negatively sampling"""
-        positive_samples = set(self._read())
+        all_pos_lists = [fr() for fr in self.pos_file_readers]
+        positive_samples = set(
+            [item for sublist in all_pos_lists for item in sublist])
         all_entities = list(
             EntityIdReader(self.all_datadir / self.dataset_name)())
         self.negative_sampler.entities = all_entities
@@ -214,6 +224,7 @@ class OpenKEDatasetReaderMaxMargin(OpenKEDatasetReader):
         }
 
         return Instance(fields)
+
 
 @DatasetReader.register("openke-dataset-relation-transform")
 class OpenKEDatasetReaderRelTransform(OpenKEDatasetReader):

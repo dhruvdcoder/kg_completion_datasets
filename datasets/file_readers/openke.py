@@ -132,6 +132,7 @@ class RankValIdReader(FileReader):
                  check_files: Optional[List[Path]] = None,
                  valfile: Optional[Path] = None,
                  entity2idfile: Optional[Path] = None,
+                 val_format: bool = True,
                  **kwargs) -> Iterable[RankValidationSampleHeadAndTailT]:
 
         if check_files is None:
@@ -171,8 +172,8 @@ class RankValIdReader(FileReader):
                 else:
                     s = [None, head_or_tail, relation]
 
-                #also_check = [head_or_tail, head_or_tail, relation]
-                also_check = []
+                also_check = tuple([head_or_tail, head_or_tail, relation])
+                #also_check = []
 
                 for entity in all_entities:
                     possible = deepcopy(s)

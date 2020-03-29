@@ -5,7 +5,7 @@ from allennlp.common.params import Params
 from typing import Iterable, Callable, Optional, Tuple, List
 from .constants import Mode
 from .types import PathT, NegativeSamplerProtocol
-from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader
+from ..file_readers.openke import TrainIdReader, EntityIdReader, ValIdReader, SamplesIdReader
 from ..sampling.simple_samplers import UniformNegativeSampler
 from pathlib import Path
 from .lazy_iterators import (LazyIteratorWithNegativeSampling,
@@ -50,12 +50,12 @@ class OpenKEDatasetReaderWithNegativeSampling(OpenKEDataset):
                  positive_files: Optional[List[str]] = None,
                  number_negative_samples: int = 1):
         super().__init__(dataset_name, all_datadir, mode, lazy=True)
+        self.positive_files = positive_files
 
-        if positive_files is None:
-            positive_files = ['train2id.txt', 'valid2id.txt', 'test2id.txt']
-        self.pos_file_readers = [
-            TrainIdReader(self.all_datadir / f) for f in positive_files
-        ]
+        if self.positive_files is None:
+            self.positive_files = [
+                'train2id.txt', 'valid2id.txt', 'test2id.txt'
+            ]
 
         self.number_negative_samples = number_negative_samples
 
@@ -118,7 +118,11 @@ class OpenKEDatasetReaderWithNegativeSampling(OpenKEDataset):
 
     def read(self, filename=None) -> Iterable[Instance]:
         """Lazyly return instances by negatively sampling"""
-        all_pos_lists = [fr() for fr in self.pos_file_readers]
+        all_pos_lists = [
+            SamplesIdReader().read(self.all_datadir / self.dataset_name / f)
+
+            for f in self.positive_files
+        ]
         positive_samples = set(
             [item for sublist in all_pos_lists for item in sublist])
         all_entities = list(

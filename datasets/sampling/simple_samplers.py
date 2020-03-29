@@ -14,7 +14,7 @@ class UniformNegativeSampler(NegtiveSampler):
     def __init__(self,
                  entities: Optional[Iterable[Hashable]] = None,
                  all_positive: Optional[Set[Tuple]] = None,
-                 max_attempts: int = 1000):
+                 max_attempts: int = 10000):
         self.entities_list = list(
             entities
         ) if entities is not None else None  # required by np.choice()
@@ -67,6 +67,16 @@ class UniformNegativeSampler(NegtiveSampler):
                 potential_negative_sample[replacement_index] = a_sample_entity
 
                 if tuple(potential_negative_sample) in self.all_positive:
+                    continue
+
+                if potential_negative_sample[0] == potential_negative_sample[
+                        1]:
+
+                    if replacement_index == 1:
+                        replacement_index = 0
+                    else:
+                        replacement_index = 1
+
                     continue
 
                 return tuple(potential_negative_sample)
